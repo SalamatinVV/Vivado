@@ -20,7 +20,7 @@
 module adder_tree
     #(
         parameter  DATA_W       = 3                                                             ,
-        parameter  DATA_N       = 12                                                             ,
+        parameter  DATA_N       = 9                                                             ,
         localparam LOG_DATA_N   = $clog2(DATA_N)                                                ,
         localparam O_DATA_W     = DATA_W + DATA_N                                           ,
         localparam SUM_N        = 2 ** LOG_DATA_N
