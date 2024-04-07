@@ -55,7 +55,7 @@ module adder_tree
         for (integer j = 0; j < STAGES_N; j++) begin
                     if (j == 0) begin
                         CSA_NUM[j] = DATA_N/3                                                   ; 
-                        remains_CSA_NUM[j] = CSA_NUM[j] % 3                                        ;
+                        remains_CSA_NUM[j] = DATA_N % 3                                        ;
                     end else if (j == 1) begin
                         CSA_NUM[j] = (CSA_NUM[j-1] * 2 + remains_CSA_NUM[j-1]) / 3                   ;
                         remains_CSA_NUM[j] = remains_CSA_NUM[j-1] ;
