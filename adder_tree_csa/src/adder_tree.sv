@@ -54,10 +54,10 @@ module adder_tree
     logic [0 : 31][1 : 0] remains_CSA_NUM                   ='0                                 ;
         for (integer j = 0; j < STAGES_N; j++) begin
                     if (j == 0) begin
-                        CSA_NUM[j] = DATA_N/3                                                   ; 
+                                CSA_NUM[j] = DATA_N/3                                           ; 
                         remains_CSA_NUM[j] = DATA_N % 3                                         ;
                     end else begin
-                        CSA_NUM[j] = (CSA_NUM[j-1] * 2 + remains_CSA_NUM[j-1]) / 3              ;
+                                CSA_NUM[j] = (CSA_NUM[j - 1] * 2 + remains_CSA_NUM[j-1]) / 3    ;
                         remains_CSA_NUM[j] = (CSA_NUM[j - 1] * 2 + remains_CSA_NUM[j-1]) % 3    ;
                     end
         end            
@@ -69,8 +69,8 @@ module adder_tree
     generate
         for (genvar stage = 0; stage <= STAGES_N; stage++) begin
             
-            localparam O_STAGE_N = SUM_N >> stage                                               ;
-            localparam STAGE_W   = DATA_W + stage                                               ; // Increasing the word width on each layer
+            localparam O_STAGE_N = SUM_N  >> stage                                               ;
+            localparam   STAGE_W = DATA_W +  stage                                               ; // Increasing the word width on each layer
             if (stage == 0) begin
                 for (genvar i = 0; i < SUM_N; i++) begin                                        
                     always_comb begin
