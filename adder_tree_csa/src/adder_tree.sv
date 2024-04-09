@@ -51,17 +51,14 @@ module adder_tree
     
     function automatic logic [31 : 0] [31 : 0] CSA_N(input logic [31 : 0] input_stage)  ; // funct comm
     logic [0 : 31][31 : 0] CSA_NUM  ='0                                            ;
-    logic [0 : 31][1 : 0] remains_CSA_NUM                   ='0                                            ;
+    logic [0 : 31][1 : 0] remains_CSA_NUM                   ='0                                 ;
         for (integer j = 0; j < STAGES_N; j++) begin
                     if (j == 0) begin
                         CSA_NUM[j] = DATA_N/3                                                   ; 
-                        remains_CSA_NUM[j] = DATA_N % 3                                        ;
-                    end else if (j == 1) begin
-                        CSA_NUM[j] = (CSA_NUM[j-1] * 2 + remains_CSA_NUM[j-1]) / 3                   ;
-                        remains_CSA_NUM[j] = remains_CSA_NUM[j-1] ;
+                        remains_CSA_NUM[j] = DATA_N % 3                                         ;
                     end else begin
-                        remains_CSA_NUM[j] = (CSA_NUM[j - 1] * 2 + remains_CSA_NUM[j-1]) % 3            ;
-                        CSA_NUM[j] = (CSA_NUM[j-1] * 2 + remains_CSA_NUM[j-1]) / 3                   ;
+                        CSA_NUM[j] = (CSA_NUM[j-1] * 2 + remains_CSA_NUM[j-1]) / 3              ;
+                        remains_CSA_NUM[j] = (CSA_NUM[j - 1] * 2 + remains_CSA_NUM[j-1]) % 3    ;
                     end
         end            
         return CSA_NUM[input_stage]                                                             ;                   
