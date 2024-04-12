@@ -4,7 +4,7 @@
 // 
 // Create Date: 12.04.2024 14:55:28
 // Design Name: 
-// Module Name: adder_tree_csa_4_in
+// Module Name: adder_tree_csa_8_in
 // Project Name: 
 // Target Devices: 
 // Tool Versions: 
@@ -18,57 +18,43 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 12.04.2024 14:55:28
-// Design Name: 
-// Module Name: adder_tree_csa_4_in
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
-module adder_tree_csa_4_in
+module adder_tree_csa_8_in
 #(
-    parameter  I_DATA_W       = 3                                                             , // Ширина слова
-    parameter  I_DATA_N       = 4                                                            , // кол-во слов
-    localparam    STAGES_N = StageCount(I_DATA_N) + 1                                        , // ?'ызов функции подсч?'та сло?'в
-    localparam O_DATA_W     = I_DATA_W + STAGES_N + 1                                             , // подсчёт размера выходного слова 
-    localparam SUM_N        = 2 ** $clog2(I_DATA_N)                                               // размер массива sum
+    parameter  I_DATA_W       = 3                                                             , // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
+    parameter  I_DATA_N       = 8                                                            , // пїЅпїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅ
+    localparam    STAGES_N = StageCount(I_DATA_N) + 1                                        , // ?'пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ?'пїЅпїЅ пїЅпїЅпїЅ?'пїЅ
+    localparam O_DATA_W     = I_DATA_W + STAGES_N + 1                                             , // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 
+    localparam SUM_N        = 2 ** $clog2(I_DATA_N)                                               // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ sum
 )                           
 (                           
-    input  logic                                     clk                                      , // тактовая частота
-    input  logic [0 : I_DATA_N  - 1][I_DATA_W - 1 : 0] i_data                                 , // входные данные
-    output logic                    [O_DATA_W - 1 : 0] o_data                                   // выходные данные
+    input  logic                                     clk                                      , // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+    input  logic [0 : I_DATA_N  - 1][I_DATA_W - 1 : 0] i_data                                 , // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
+    output logic                    [O_DATA_W - 1 : 0] o_data                                   // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
 )                                                                                             ;
 
 //////////////////////////////////////////////function/////////////////////////////////////////////
-function automatic logic [31 : 0] StageCount(input logic [31 : 0] i_num)                    ; // Функция подсчёта кол-во слоёв...
+function automatic logic [31 : 0] StageCount(input logic [31 : 0] i_num)                    ; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅ...
     logic [31 : 0] data_n           = '0                                                    ; // пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
     logic [31 : 0] w_remains        = i_num / 3 * 3                                         ;
-    logic [31 : 0] remains          = i_num % 3                                             ;                                           
+    logic [31 : 0] remains          = i_num % 3                                             ;
     logic [31 : 0] stage_n_res      = '0                                                    ;
+    if (data_n == 4) begin
+        stage_n_res = 1;
+    end else if (data_n == 5) begin
+        stage_n_res = 2;
+    end else begin
         while ( data_n != 3) begin      
             stage_n_res = stage_n_res + 1                                                       ;
             data_n      = w_remains   / 3 * 2 + remains                                         ;
             w_remains   = data_n      / 3 * 3                                                   ;
             remains     = data_n      % 3                                                       ;
         end     
+    end
     return stage_n_res                                                                      ;
 endfunction     
  
 
-function automatic logic [31 : 0] [31 : 0] CsaCount(input logic [31 : 0] input_stage)       ; // Функция подсчёта csa на каждом слоё
+function automatic logic [31 : 0] [31 : 0] CsaCount(input logic [31 : 0] input_stage)       ; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ csa пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
     logic [0 : 31][31 : 0]        CSA_NUM  = '0                                             ;
     logic [0 : 31][1 : 0] remains_CSA_NUM  = '0                                             ;
         for (integer j = 0; j < STAGES_N; j++) begin
@@ -83,7 +69,7 @@ function automatic logic [31 : 0] [31 : 0] CsaCount(input logic [31 : 0] input_s
     return CSA_NUM[input_stage]                                                             ;                   
 endfunction    
 
-function automatic logic [31 : 0] RemainWire (input int x)                                  ;   // Функция подсчёта лишних провод на выходе CSA
+function automatic logic [31 : 0] RemainWire (input int x)                                  ;   // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ CSA
     logic [1 : 0] rW = '0                                                                   ;                                         
     if (x % 3 == 0) begin
         rW = 0                                                                              ;
@@ -102,20 +88,20 @@ logic signed [0 : STAGES_N][0 : SUM_N - 1][O_DATA_W - 1 : 0] sum         ;
 logic signed [0 : STAGES_N][0 : 1        ][O_DATA_W - 1 : 0] remWire = '0;
 /////////////////////////////////////////GENERATION ADDER TREE/////////////////////////////
 generate
-    for(genvar stage = 0; stage <= STAGES_N; stage++) begin             // Генерация слоёв
-        localparam   STAGE_W = I_DATA_W +  stage                      ;   // Т.к на выходе CSA слово увеличивается на 1 разряд по сравнению с входом, то данный параметр позволяет увеличвать размерность массивов на каждом слоё
+    for(genvar stage = 0; stage <= STAGES_N; stage++) begin             // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
+        localparam   STAGE_W = I_DATA_W +  stage                      ;   // пїЅ.пїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ CSA пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ 1 пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ
         if (stage == 0) begin  
-            always_comb begin                                          // Генерация 0 слоя, в которым мы входные данные записываем в массив sum
-                if (I_DATA_N % 3 == 0) begin                            // Если у нас кол-во входных слов кратны 3, то мы не испоьзуем остаточные провода
+            always_comb begin                                          // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 0 пїЅпїЅпїЅпїЅ, пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅ sum
+                if (I_DATA_N % 3 == 0) begin                            // пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ 3, пїЅпїЅ пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                     for (int i = 0; i < I_DATA_N; i++) begin
                         sum[stage][i][I_DATA_W - 1 : 0] = i_data[i];
                     end
-                end else if (I_DATA_N % 3 == 1) begin                   // Если у нас кол-во входных слов кратны 3 и остаток 1, то мы используем 1 остаточный провод
+                end else if (I_DATA_N % 3 == 1) begin                   // пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ 3 пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ 1, пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 1 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
                     for (int i = 0; i < I_DATA_N - 1; i++) begin
                         sum[stage][i][I_DATA_W - 1 : 0] = i_data[i];
                     end
                     remWire[stage][0][I_DATA_W - 1 : 0] = i_data[I_DATA_N - 1] ;
-                end else begin                                          // Если у нас ко-во входных слов кратны 3 и остаток 2, то мы используем 2 остаточных провода
+                end else begin                                          // пїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅ пїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ 3 пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ 2, пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 2 пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                     for (int i = 0; i < I_DATA_N - 2; i++) begin
                         sum[stage][i][I_DATA_W - 1 : 0] = i_data[i];
                     end
@@ -123,7 +109,7 @@ generate
                     remWire[stage][1][I_DATA_W - 1 : 0] = i_data[I_DATA_N - 1] ;
                 end
              end
-        end else if (stage == 1) begin                                                  // Генерация слоёв с CSA
+        end else if (stage == 1) begin                                                  // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ пїЅ CSA
             localparam CSA_NUMBER = CsaCount (stage - 1)                        ;
             for(genvar i = 0; i < CSA_NUMBER; i++) begin
                 CSA_ff #(STAGE_W - 1) stagenum
@@ -163,5 +149,5 @@ generate
         end
     end
 endgenerate
-assign o_data = sum[STAGES_N][0][O_DATA_W - 1 - 1 : 0] + sum[STAGES_N][1][O_DATA_W - 1 - 1 : 0]; // Конечное суммирование последних 2 чисел
+assign o_data = sum[STAGES_N][0][O_DATA_W - 1 - 1 : 0] + sum[STAGES_N][1][O_DATA_W - 1 - 1 : 0]; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ 2 пїЅпїЅпїЅпїЅпїЅ
 endmodule
