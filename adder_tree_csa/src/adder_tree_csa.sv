@@ -21,9 +21,9 @@
 module adder_tree_csa
     #(
         parameter  I_DATA_W       = 3                                                             , // Ширина слова
-        parameter  I_DATA_N       = 21                                                            , // кол-во слов
+        parameter  I_DATA_N       = 22                                                            , // кол-во слов
         localparam O_DATA_W     = I_DATA_W + I_DATA_N                                             , // подсчёт размера выходного слова 
-        localparam SUM_N        = 2 ** $clog2(DATA_N)                                               // размер массива sum
+        localparam SUM_N        = 2 ** $clog2(I_DATA_N)                                               // размер массива sum
     )                           
     (                           
         input  logic                                     clk                                      , // тактовая частота
@@ -46,15 +46,15 @@ module adder_tree_csa
         end     
         return stage_n_res                                                                      ;
     endfunction     
-    localparam    STAGES_N = StageCount(DATA_N) + 1                                             ; // Вызов функции подсчёта слоёв
+    localparam    STAGES_N = StageCount(I_DATA_N) + 1                                             ; // Вызов функции подсчёта слоёв
 
     function automatic logic [31 : 0] [31 : 0] CsaCount(input logic [31 : 0] input_stage)       ; // Функция подсчёта csa на каждом слоё
         logic [0 : 31][31 : 0]        CSA_NUM  = '0                                             ;
         logic [0 : 31][1 : 0] remains_CSA_NUM  = '0                                             ;
             for (integer j = 0; j < STAGES_N; j++) begin
                 if (j == 0) begin
-                            CSA_NUM[j] = DATA_N / 3                                             ; 
-                    remains_CSA_NUM[j] = DATA_N % 3                                             ;
+                            CSA_NUM[j] = I_DATA_N / 3                                             ; 
+                    remains_CSA_NUM[j] = I_DATA_N % 3                                             ;
                 end else begin
                             CSA_NUM[j] = (CSA_NUM[j - 1] * 2 + remains_CSA_NUM[j-1]) / 3        ;
                     remains_CSA_NUM[j] = (CSA_NUM[j - 1] * 2 + remains_CSA_NUM[j-1]) % 3        ;
@@ -77,19 +77,47 @@ module adder_tree_csa
         return rW;
     endfunction
 
-    /////////////////////////////////////////ОБЪЯВЛЕНИЕ ПЕРЕМЕННЫХ////////////////////////////////////
+    /////////////////////////////////////////ОБЪЯВЛЕН�?Е ПЕРЕМЕННЫХ////////////////////////////////////
     logic signed [0 : STAGES_N][0 : SUM_N - 1][O_DATA_W - 1 : 0] sum         ;
     logic signed [0 : STAGES_N][0 : 1        ][O_DATA_W - 1 : 0] remWire = '0;
-    /////////////////////////////////////////ГЕНЕРАЦИЯ ДЕРЕВА СУММАТОРОВ /////////////////////////////
+    /////////////////////////////////////////ГЕНЕРАЦ�?Я ДЕРЕВА СУММАТОРОВ /////////////////////////////
     generate
         for(genvar stage = 0; stage <= STAGES_N; stage++) begin             // Генерация слоёв
-            if (stage = 0) begin                                            // Генерация 0 слоя, в которым мы входные данные записываем в массив sum
-                for (genvar i = 0; i < I_DATA_N; i++) begin
-                    sum[stage][i][I_DATA_W - 1 : 0] = i_data[i];
-                end
+            localparam   STAGE_W = I_DATA_W +  stage                      ;   // Т.к на выходе CSA слово увеличивается на 1 разряд по сравнению с входом, то данный параметр позволяет увеличвать размерность массивов на каждом слоё
+            if (stage == 0) begin  
+                always_comb begin                                          // Генерация 0 слоя, в которым мы входные данные записываем в массив sum
+                    if (I_DATA_N % 3 == 0) begin                            // Если у нас кол-во входных слов кратны 3, то мы не испоьзуем остаточные провода
+                        for (int i = 0; i < I_DATA_N; i++) begin
+                            sum[stage][i][I_DATA_W - 1 : 0] = i_data[i];
+                        end
+                    end else if (I_DATA_N % 3 == 1) begin                   // Если у нас кол-во входных слов кратны 3 и остаток 1, то мы используем 1 остаточный провод
+                        for (int i = 0; i < I_DATA_N - 1; i++) begin
+                            sum[stage][i][I_DATA_W - 1 : 0] = i_data[i];
+                        end
+                        remWire[stage][0][I_DATA_W - 1 : 0] = i_data[I_DATA_N - 1] ;
+                    end else begin                                          // Если у нас ко-во входных слов кратны 3 и остаток 2, то мы используем 2 остаточных провода
+                        for (int i = 0; i < I_DATA_N - 2; i++) begin
+                            sum[stage][i][I_DATA_W - 1 : 0] = i_data[i];
+                        end
+                        remWire[stage][0][I_DATA_W - 1 : 0] = i_data[I_DATA_N - 2] ;
+                        remWire[stage][1][I_DATA_W - 1 : 0] = i_data[I_DATA_N - 1] ;
+                    end
+                 end
             end else begin                                                  // Генерация слоёв с CSA
-                
+                localparam CSA_NUMBER = CsaCount (stage - 1)                        ;
+                for(genvar i = 0; i < CSA_NUMBER; i++) begin
+                    CSA_ff #(STAGE_W - 1) stagenum
+                    (
+                        .clk        (clk),
+                        .i_f        (sum[stage - 1][3 * i    ]                   )          ,
+                        .i_s        (sum[stage - 1][3 * i + 1]                   )          ,
+                        .i_t        (sum[stage - 1][3 * i + 2]                   )          ,
+                        .o_stage_s  (sum[stage    ][2*i      ][(STAGE_W - 1) : 0])          ,
+                        .o_stage_c  (sum[stage    ][2*i + 1  ][(STAGE_W - 1) : 0])      
+                    )       ;  
+                end
             end
         end
     endgenerate
+    assign o_data = sum[STAGES_N][0] + sum[STAGES_N][1]; // Конечное суммирование последних 2 чисел
 endmodule
