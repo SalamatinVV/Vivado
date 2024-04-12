@@ -63,8 +63,8 @@ module adder_tree
         end            
         return CSA_NUM[input_stage]                                                             ;                   
     endfunction    
-    function automatic logic [31 : 0] _remainWire (input logic [31 : 0] x) ;// реализация лишних входов, которые выходят из сумматоров
-                                logic [31 : 0] rW;                                         // на вход мы должны подавать колличество входов(для 1 цикла это колл-во sum[stage = 0])
+    function automatic logic [31 : 0] _remainWire (input int x) ;// реализация лишних входов, которые выходят из сумматоров
+        logic [1 : 0] rW = '0;                                         // на вход мы должны подавать колличество входов(для 1 цикла это колл-во sum[stage = 0])
         if (x % 3 == 0) begin
             rW = 0                                                 ;
         end else begin
@@ -78,7 +78,7 @@ module adder_tree
     endfunction
     //////////////////////////////////////объявление переменных//////////////////////////////////////////////////////
     logic signed [0 : STAGES_N    ][0 : SUM_N             - 1][O_DATA_W - 1 : 0] sum            ;
-    logic [STAGES_N : 0][1 : 0][O_DATA_W - 1 : 0] remWire = '0;
+    logic signed [0 : STAGES_N][0 : 1        ][O_DATA_W - 1 : 0] remWire = '0;
     ///////////////////////////////////////////////generate//////////////////////////////////////////////////////////
     generate
         for (genvar stage = 0; stage <= STAGES_N; stage++) begin
@@ -154,27 +154,26 @@ module adder_tree
                         end
                     end
                 end else if (differ == 1) begin
-                    for (genvar i = 0; i < CSA_NUMBER; i++) begin
+                     for (genvar i = 0; i < CSA_NUMBER; i++) begin
+                        
                         if (i == CSA_NUMBER - 1) begin
-                            for (genvar j = 0; j < STAGES_N - 1; j++) begin
+                        
+                            for (genvar j = 0; j < STAGES_N - 1; j++) begin 
                                 for (genvar k = 0; k < 2; k++) begin 
-                                    if (!remWire[j][k]) begin
-                                        CSA_ff #(STAGE_W - 1) stagenum
-                                        (
-                                            .clk        (clk),
-                                            .i_f        (sum[stage - 1][3 * i    ]                   )          ,
-                                            .i_s        (sum[stage - 1][3 * i + 1]                   )          ,
-                                            .i_t        (remWire[j][k]                               )          ,
-                                            .o_stage_s  (sum[stage    ][2 * i    ][(STAGE_W - 1) : 0])          ,
-                                            .o_stage_c  (sum[stage    ][2 * i + 1][(STAGE_W - 1) : 0])      
-                                        )       ;  
-                                        always_comb begin
-                                            remWire[j][k] = '0 ;
+                                always_comb begin
+                                        if ( remWire[j][k] != '0) begin
+                                             
+                                            sum[stage    ][2 * i    ][(STAGE_W - 1) : 0] = {'0, (sum[stage - 1][3 * i    ] ^ sum[stage - 1][3 * i + 1] ^ remWire[j][k])};
+                                            sum[stage    ][2 * i + 1][(STAGE_W - 1) : 0] = {((sum[stage - 1][3 * i    ] & sum[stage - 1][3 * i + 1]) | (sum[stage - 1][3 * i    ] & remWire[j][k]) | (sum[stage - 1][3 * i + 1] & remWire[j][k])), '0};
+                                            
+                                                remWire[j][k] = '0 ;
+                                           disable outher_loop;
                                         end
-                                        break;
+                                       end
                                     end
+                                   
                                 end
-                            end
+                            
                         end else begin
                             CSA_ff #(STAGE_W - 1) stagenum
                             (
@@ -232,7 +231,6 @@ module adder_tree
                 end
             end
                 end
-        
      endgenerate
      assign o_data = sum[STAGES_N][0] + sum[STAGES_N][1];
 endmodule

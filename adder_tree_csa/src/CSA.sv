@@ -11,7 +11,7 @@ module CSA_ff
     output logic [DATA_W : 0] o_stage_c
     );
 
-        always_ff @(posedge clk) 
+        always_comb 
         begin  
             o_stage_s <= {'0, (i_f ^ i_s ^ i_t)};
             o_stage_c <= {(i_f & i_s) | (i_f & i_t) | (i_s & i_t), '0};
