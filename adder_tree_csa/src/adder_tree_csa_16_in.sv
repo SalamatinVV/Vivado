@@ -21,7 +21,7 @@
 module adder_tree_csa_16_in
 #(
     parameter  I_DATA_W     = 3                                                             , // ������ �����
-    parameter  I_DATA_N     = 16                                                            , // ���-�� ����
+    parameter  I_DATA_N     = 32                                                            , // ���-�� ����
     localparam STAGES_N     = StageCount(I_DATA_N) + 1                                        , // ?'���� ������� �����?'�� ���?'�
     localparam O_DATA_W     = I_DATA_W + STAGES_N + 1                                             , // ������� ������� ��������� ����� 
     localparam SUM_N        = 2 ** $clog2(I_DATA_N)                                               // ������ ������� sum
@@ -114,70 +114,62 @@ output logic [31 : 0] m,n,f,g;
                         for (int k = 0; k < 2; k++) begin
                             if (remWire_func[j][k] != 0) begin
                                 remWire_func[j][k] = '0;
-                                //if (x_stage == stage) begin
+                                if (x_stage == stage) begin
                                     m = j;
                                     n = k;
+                                    end
                                     $display("%0d %0d", j,k);
                                     flag = '1;
-                              //  end
+                                    break;
+                              
                             end
                         end
                         if (flag != 0) break;
                     end
                 end else if ((CSA_NUM[stage - 1] * 3 - CSA_NUM[stage - 2] * 2) == 2) begin
-                    for (int i = 0; i < 2; i++) begin
-                        for (int j = 0; j < NUMBER_OF_STAGES; j++) begin
+                     for (int j = 0; j < NUMBER_OF_STAGES; j++) begin
                      int flag ='0;
                                         for (int k = 0; k < 2; k++) begin
+                                        $display("%0d", remWire_func[j][k]);
                                             if (remWire_func[j][k] != 0) begin
+                                            $display("%0d", remWire_func[j][k]);
                                                 remWire_func[j][k] = '0;
-                                              //  if (x_stage == stage) begin
-                                              if (i == 0) begin
-                                                    m = j;
-                                                    n = k;
-                                              end else begin
+                                                $display("%0d", remWire_func[j][k]);
+                                                   if (x_stage == stage) begin
                                                     f = j;
                                                     g = k;
-                                              end
-                                                      flag = '1;
-                               // end
+                                                    end
+                                                    flag = '1;
+                                                    $display("%0d %0d", j,k);
+                                                    break;
+                                                    
                             end
                         end
                         if (flag != 0) break;
                     end
-                    end
-//                     for (int j = 0; j < NUMBER_OF_STAGES; j++) begin
-//                     int flag ='0;
-//                                        for (int k = 0; k < 2; k++) begin
-//                                            if (remWire_func[j][k] != 0) begin
-//                                                remWire_func[j][k] = '0;
-//                                              //  if (x_stage == stage) begin
-//                                                    f = j;
-//                                                    g = k;
-//                                                    flag = '1;
-//                               // end
-//                            end
-//                        end
-//                        if (flag != 0) break;
-//                    end
-//                    for (int j = 0; j < NUMBER_OF_STAGES; j++) begin
-//                    int flag ='0;
-//                        for (int k = 0; k < 2; k++) begin
-//                            if (remWire_func[j][k] != 0) begin
-//                                remWire_func[j][k] = '0;
-//                             //   if (x_stage == stage) begin
-//                                    m = j;
-//                                    n = k;
-//                             //   end
-//                             flag = '1;
-//                            end
-//                        end
-//                        if (flag != 0) break;
-//                     end
+                    for (int u = 0; u < NUMBER_OF_STAGES; u++) begin
+                    int flag1 ='0;
+                        for (int h = 0; h < 2; h++) begin
+                        $display("%0d", remWire_func[u][h]);
+                            if (remWire_func[u][h] != 0) begin
+                            $display("%0d", remWire_func[u][h]);
+                                remWire_func[u][h] = '0;
+                                $display("%0d", remWire_func[u][h]);
+                                    if (x_stage == stage) begin
+                                    m = u;
+                                    n = h;
+                                    end
+                            flag1 = '1;
+                            $display("%0d %0d", u,h);
+                            break;
+                            end
+                        end
+                       if (flag1 != 0) break;
+                     end
                     
                 end
 
-            if ((CSA_NUM[stage - 1] * 2 - CSA_NUM[stage] * 3) == 0) begin
+            if ((CSA_NUM[stage - 1] * 2 - CSA_NUM[stage] * 3) <= 0) begin
                 remWire_func[stage][0] = '0;
                 remWire_func[stage][1] = '0;
             end else if((CSA_NUM[stage - 1] * 2 - CSA_NUM[stage] * 3) == 1) begin

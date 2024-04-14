@@ -1,7 +1,7 @@
 module tb_16_in
     #(
     parameter I_DATA_W = 3,
-    parameter I_DATA_N = 16,
+    parameter I_DATA_N = 32,
     localparam STAGES_N = StageCount(I_DATA_N) + 1                                        ,
     localparam O_DATA_W = I_DATA_W + STAGES_N + 1
     )
