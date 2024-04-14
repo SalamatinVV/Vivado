@@ -1,35 +1,13 @@
-`timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 12.04.2024 23:19:39
-// Design Name: 
-// Module Name: tb_4_in
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
-
-module tb_8_in
+module tb_16_in
     #(
     parameter I_DATA_W = 3,
-    parameter I_DATA_N = 8,
+    parameter I_DATA_N = 16,
     localparam STAGES_N = StageCount(I_DATA_N) + 1                                        ,
     localparam O_DATA_W = I_DATA_W + STAGES_N + 1
     )
     ();
-    function automatic logic [31 : 0] StageCount(input logic [31 : 0] i_num)                    ; // ������� �������� ���-�� ����...
-        logic [31 : 0] data_n           = '0                                                    ; // � ����� ������ ����������
+    function automatic logic [31 : 0] StageCount(input logic [31 : 0] i_num)                    ; // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ-пїЅпїЅ пїЅпїЅпїЅпїЅ...
+        logic [31 : 0] data_n           = '0                                                    ; // пїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
         logic [31 : 0] w_remains        = i_num / 3 * 3                                         ;
         logic [31 : 0] remains          = i_num % 3                                             ;                                           
         logic [31 : 0] stage_n_res      = '0                                                    ;
@@ -56,7 +34,7 @@ module tb_8_in
             end
         end
     end
-    adder_tree_csa_8_in #(I_DATA_W, I_DATA_N) adder_tree_inst
+    adder_tree_csa_16_in #(I_DATA_W, I_DATA_N) adder_tree_inst
     (
         .i_data(i_data),
         .clk(clk),

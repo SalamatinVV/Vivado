@@ -23,7 +23,7 @@
 module tb
     #(
         parameter DATA_W                   = 5                     ,           // Ширина i_data
-        parameter DATA_N                   = 7                     ,           // Кол-во входов i_data
+        parameter DATA_N                   = 11                     ,           // Кол-во входов i_data
         localparam STAGES_N                = $clog2(DATA_N)        ,           // Кол-во слоёв дерева сумматоров (Определяется логарифмом от кол-ва входов i_data)
         parameter [STAGES_N - 1 : 0] FF_P  = '0                    ,           // Pасстановка регистров по слоям
         localparam O_DATA_W                = DATA_W + STAGES_N                 // Ширина выхода o_data

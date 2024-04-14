@@ -43,21 +43,21 @@ module adder_tree_bin
         localparam O_STAGE_N = SUM_N  >> stage                                              ;       // Dividing by 2 the number of adders on each layer
         localparam STAGE_W   = DATA_W +  stage                                              ;       // Increasing the word width on each layer
             if (stage == 0) begin                                                                   // The zero layer of the adder
-                for (genvar i = 0; i < DATA_N; i++) begin                                        
-                    always_comb begin
-                        sum[stage][i][STAGE_W - 1  : 0] = i_data[i][DATA_W - 1 : 0]         ;
+                always_comb begin
+                    for (int i = 0; i < DATA_N; i++) begin                                        
+                        sum[stage][i] = i_data[i]         ;
                     end
                 end
             end else begin
-                if          (FF_P[stage] == 1) begin                                                
-                    for (genvar i = 0; i < O_STAGE_N; i++) begin
-                        always_ff @(posedge clk) begin
+                if          (FF_P[stage] == 1) begin              
+                    always_ff @(posedge clk) begin                                  
+                        for (int i = 0; i < O_STAGE_N; i++) begin
                             sum[stage][i][STAGE_W - 1 : 0] <= $signed(sum[stage - 1][2*i][(STAGE_W - 1) - 1 : 0]) + $signed(sum[stage - 1][2*i + 1][(STAGE_W - 1) - 1 : 0]);
                         end
                     end
                 end else if (FF_P[stage] == 0) begin
-                    for (genvar i = 0; i < O_STAGE_N; i++) begin
-                        always_comb begin
+                    always_comb begin
+                        for (int i = 0; i < O_STAGE_N; i++) begin
                             sum[stage][i][STAGE_W - 1 : 0] = $signed(sum[stage - 1][2*i][(STAGE_W - 1) - 1 : 0]) + $signed(sum[stage - 1][2*i + 1][(STAGE_W - 1) - 1 : 0]);
                         end
                     end

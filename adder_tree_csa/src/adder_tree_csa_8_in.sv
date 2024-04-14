@@ -36,20 +36,14 @@ module adder_tree_csa_8_in
 function automatic logic [31 : 0] StageCount(input logic [31 : 0] i_num)                    ; // ������� �������� ���-�� ����...
     logic [31 : 0] data_n           = '0                                                    ; // � ����� ������ ����������
     logic [31 : 0] w_remains        = i_num / 3 * 3                                         ;
-    logic [31 : 0] remains          = i_num % 3                                             ;
+    logic [31 : 0] remains          = i_num % 3                                             ;                                           
     logic [31 : 0] stage_n_res      = '0                                                    ;
-    if (data_n == 4) begin
-        stage_n_res = 1;
-    end else if (data_n == 5) begin
-        stage_n_res = 2;
-    end else begin
         while ( data_n != 3) begin      
             stage_n_res = stage_n_res + 1                                                       ;
             data_n      = w_remains   / 3 * 2 + remains                                         ;
             w_remains   = data_n      / 3 * 3                                                   ;
             remains     = data_n      % 3                                                       ;
         end     
-    end
     return stage_n_res                                                                      ;
 endfunction     
  
@@ -122,7 +116,7 @@ generate
                     .o_stage_c  (sum[stage    ][2*i + 1  ][(STAGE_W - 1)     : 0])      
                 )       ;  
             end
-        end else begin
+        end else if (stage == 2) begin
             localparam CSA_NUMBER = CsaCount (stage - 1)                        ;
             localparam CSA_CURR   = CsaCount (stage - 1)                        ;
             localparam CSA_PAST   = CsaCount (stage - 2)                        ;
@@ -145,6 +139,84 @@ generate
                     .o_stage_s  (sum[stage    ][2*i      ][(STAGE_W - 1)     : 0])          ,
                     .o_stage_c  (sum[stage    ][2*i + 1  ][(STAGE_W - 1)     : 0])      
                 )       ;  
+                localparam CSA_NEXT   = CsaCount (stage)                        ;
+                localparam diffnext       = CSA_CURR * 2 - CSA_NEXT * 3                 ;
+                always_comb begin
+                    if (diffnext == 1) begin
+                        remWire[stage][0] = sum[stage][CSA_NUMBER * 2 - 1];
+                    end else if (diffnext == 2) begin
+                        remWire[stage][0] = sum[stage][CSA_NUMBER * 2 - 1];
+                        remWire[stage][1] = sum[stage][CSA_NUMBER * 2 - 2];
+                    end
+                end
+            end
+        end else if (stage == 3 ) begin
+            localparam CSA_NUMBER = CsaCount (stage - 1)                        ;
+            localparam CSA_CURR   = CsaCount (stage - 1)                        ;
+            localparam CSA_PAST   = CsaCount (stage - 2)                        ;
+            localparam diff       = CSA_CURR * 3 - CSA_PAST * 2                 ;
+            always_comb begin
+                if (diff == 1) begin
+                    sum[stage - 1][CSA_NUMBER * 3 - 1][STAGE_W - 1 : 0] = remWire [stage - 1][0][(STAGE_W - 1) - 1 : 0];
+                end else if (diff == 2) begin
+                    sum[stage - 1][CSA_NUMBER * 3 - 1][STAGE_W - 1 : 0] = remWire [stage - 1][0][(STAGE_W - 1) - 1 : 0];
+                    sum[stage - 1][CSA_NUMBER * 3 - 2][STAGE_W - 1 : 0] = remWire [stage - 1][1][(STAGE_W - 1) - 1 : 0];
+                end
+            end
+            for(genvar i = 0; i < CSA_NUMBER; i++) begin
+                CSA_ff #(STAGE_W - 1) stagenum
+                (
+                    .clk        (clk),
+                    .i_f        (sum[stage - 1][3 * i    ][(STAGE_W - 1) - 1 : 0])          ,
+                    .i_s        (sum[stage - 1][3 * i + 1][(STAGE_W - 1) - 1 : 0])          ,
+                    .i_t        (sum[stage - 1][3 * i + 2][(STAGE_W - 1) - 1 : 0])          ,
+                    .o_stage_s  (sum[stage    ][2*i      ][(STAGE_W - 1)     : 0])          ,
+                    .o_stage_c  (sum[stage    ][2*i + 1  ][(STAGE_W - 1)     : 0])      
+                )       ;  
+                localparam CSA_NEXT   = CsaCount (stage)                        ;
+                localparam diffnext       = CSA_CURR * 2 - CSA_NEXT * 3                 ;
+                always_comb begin
+                    if (diffnext == 1) begin
+                        remWire[stage][0] = sum[stage][CSA_NUMBER * 2 - 1];
+                    end else if (diffnext == 2) begin
+                        remWire[stage][0] = sum[stage][CSA_NUMBER * 2 - 1];
+                        remWire[stage][1] = sum[stage][CSA_NUMBER * 2 - 2];
+                    end
+                end
+            end
+        end else begin
+            localparam CSA_NUMBER = CsaCount (stage - 1)                        ;
+            localparam CSA_CURR   = CsaCount (stage - 1)                        ;
+            localparam CSA_PAST   = CsaCount (stage - 2)                        ;
+            localparam diff       = CSA_CURR * 3 - CSA_PAST * 2                 ;
+            always_comb begin
+                if (diff == 1) begin
+                    sum[stage - 1][CSA_NUMBER * 3 - 1][STAGE_W - 1 - 1 : 0] = remWire [stage - 2][0][(STAGE_W - 1) - 1 - 1 : 0];
+                end else if (diff == 2) begin
+                    sum[stage - 1][CSA_NUMBER * 3 - 1][STAGE_W - 1 : 0] = remWire [stage - 2][0][(STAGE_W - 1) - 1 : 0];
+                    sum[stage - 1][CSA_NUMBER * 3 - 2][STAGE_W - 1 : 0] = remWire [stage - 2][1][(STAGE_W - 1) - 1 : 0];
+                end
+            end
+            for(genvar i = 0; i < CSA_NUMBER; i++) begin
+                CSA_ff #(STAGE_W - 1) stagenum
+                (
+                    .clk        (clk),
+                    .i_f        (sum[stage - 1][3 * i    ][(STAGE_W - 1) - 1 : 0])          ,
+                    .i_s        (sum[stage - 1][3 * i + 1][(STAGE_W - 1) - 1 : 0])          ,
+                    .i_t        (sum[stage - 1][3 * i + 2][(STAGE_W - 1) - 1 : 0])          ,
+                    .o_stage_s  (sum[stage    ][2*i      ][(STAGE_W - 1)     : 0])          ,
+                    .o_stage_c  (sum[stage    ][2*i + 1  ][(STAGE_W - 1)     : 0])      
+                )       ;  
+                localparam CSA_NEXT   = CsaCount (stage)                        ;
+                localparam diffnext       = CSA_CURR * 2 - CSA_NEXT * 3                 ;
+                always_comb begin
+                    if (diffnext == 1) begin
+                        remWire[stage][0] = sum[stage][CSA_NUMBER * 2 - 1];
+                    end else if (diffnext == 2) begin
+                        remWire[stage][0] = sum[stage][CSA_NUMBER * 2 - 1];
+                        remWire[stage][1] = sum[stage][CSA_NUMBER * 2 - 2];
+                    end
+                end
             end
         end
     end
