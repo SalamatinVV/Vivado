@@ -1,7 +1,7 @@
-module tb_16_in
+module tb_piplined_in
     #(
     parameter I_DATA_W = 3,
-    parameter I_DATA_N = 32,
+    parameter I_DATA_N = 8,
     localparam STAGES_N = StageCount(I_DATA_N) + 1                                        ,
     localparam O_DATA_W = I_DATA_W + STAGES_N + 1
     )
@@ -34,7 +34,7 @@ module tb_16_in
             end
         end
     end
-    adder_tree_csa_16_in #(I_DATA_W, I_DATA_N) adder_tree_inst
+    piplined_csa_tree #(I_DATA_W, I_DATA_N) piplined_csa_tree_inst
     (
         .i_data(i_data),
         .clk(clk),
