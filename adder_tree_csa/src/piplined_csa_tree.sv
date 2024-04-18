@@ -20,13 +20,14 @@
 
 module piplined_csa_tree
     #(
-        parameter  I_DATA_W     = 3                                                                 , // i_data width
-        parameter  I_DATA_N     = 8                                                                 , // Number of i_data
-        localparam STAGES_N     = StageCount(I_DATA_N) + 1                                          , // Number of layers of the adder tree
-        localparam O_DATA_W     = I_DATA_W + STAGES_N  + 1                                            // o_data output width
+        parameter                I_DATA_W = 3                                                       , // i_data width
+        parameter                I_DATA_N = 16                                                     , // Number of i_data
+        localparam               STAGES_N = StageCount(I_DATA_N) + 1                                , // Number of layers of the adder tree
+        parameter [STAGES_N : 0] FF_P     = '1                                                      , 
+        localparam               O_DATA_W = I_DATA_W + STAGES_N  + 1                                  // o_data output width
     )                           
     (                           
-        input  logic                                     clk                                        , 
+        input  logic                                       clk                                      , 
         input  logic [0 : I_DATA_N  - 1][I_DATA_W - 1 : 0] i_data                                   , 
         output logic                    [O_DATA_W - 1 : 0] o_data                                     
     )                                                                                               ;
@@ -50,7 +51,7 @@ module piplined_csa_tree
         input logic [31 : 0] i_stageFunc                                                            ; // This function selects which wires need to be connected to a specific CSA
         output logic [31 : 0] m,n,f,g                                                               ; // The input value here is the number of the layer
         localparam int NUMBER_OF_STAGES = StageCount(I_DATA_N) + 1                                  ; // in which you need to select the missing inputs for the last adder
-        logic [0 : NUMBER_OF_STAGES - 1][0 : 1][O_DATA_W - 1 : 0] remWire_func = '0                 ; // At the output, it outputs wire indexes, 
+        logic [0 : NUMBER_OF_STAGES][0 : 1] remWire_func = '0                                       ; // At the output, it outputs wire indexes, 
         for (integer stage = 0; stage <= NUMBER_OF_STAGES; stage++) begin                             // which we will use as input for the last CSA
             if          (stage == 0) begin
                 if          (I_DATA_N % 3 == 0) begin
@@ -167,7 +168,7 @@ function automatic logic [31 : 0] [31 : 0] CsaCount(input logic [31 : 0] input_s
         if (j == 0) begin
                     CSA_NUM[j] = I_DATA_N / 3                                                       ; 
             remains_CSA_NUM[j] = I_DATA_N % 3                                                       ;
-        end else begin      
+        end else    begin      
                     CSA_NUM[j] = (CSA_NUM[j - 1] * 2 + remains_CSA_NUM[j-1]) / 3                    ;
             remains_CSA_NUM[j] = (CSA_NUM[j - 1] * 2 + remains_CSA_NUM[j-1]) % 3                    ;
         end
@@ -181,89 +182,89 @@ endfunction
 
 /////////////////////////////////////////GENERATION ADDER TREE/////////////////////////////
     generate
-    for (genvar stage = 0; stage <= STAGES_N; stage++) begin
-    localparam   STAGE_W = I_DATA_W +  stage                                                        ;
-        if          (stage == 0) begin  
-            always_comb begin   
-                if(I_DATA_N % 3 == 0) begin 
-                    for(int i = 0; i < I_DATA_N; i++ ) begin    
-                        sum[stage][i] = i_data[i]                                                   ;
-                    end 
-                end else if(I_DATA_N % 3 == 1) begin    
-                    for(int i = 0; i < I_DATA_N; i++ ) begin    
-                        sum[stage][i] = i_data[i]                                                   ;
-                    end 
-                    remWire[stage][0] = i_data[I_DATA_N - 1]                                        ;
-                end else begin  
-                    for(int i = 0; i < I_DATA_N; i++ ) begin    
-                        sum[stage][i] = i_data[i]                                                   ;
-                    end 
-                    remWire[stage][0] = i_data[I_DATA_N - 1]                                        ;
-                    remWire[stage][1] = i_data[I_DATA_N - 2]                                        ;
-                end   
-            end
-        end else if (stage == 1) begin
-            localparam CSA_CURR = CsaCount (stage - 1)                                              ;
-            localparam CSA_NEXT = CsaCount (stage    )                                              ;
-            localparam diff     = CSA_CURR * 2 - CSA_NEXT * 3                                       ;
-            for (genvar i = 0; i < CSA_CURR; i++) begin
-                CSA_ff #(STAGE_W - 1) stagenum
-                (
-                    .clk        (clk),
-                    .i_f        (sum[stage - 1][3 * i    ][(STAGE_W - 1) - 1 : 0] )                 ,
-                    .i_s        (sum[stage - 1][3 * i + 1][(STAGE_W - 1) - 1 : 0] )                 ,
-                    .i_t        (sum[stage - 1][3 * i + 2][(STAGE_W - 1) - 1 : 0] )                 ,
-                    .o_stage_s  (sum[stage    ][2*i      ][(STAGE_W - 1)     : 0])                  ,
-                    .o_stage_c  (sum[stage    ][2*i + 1  ][(STAGE_W - 1)     : 0])              
-                )                                                                                   ;  
-            end 
-            always_comb begin   
-                if          (diff == 1) begin   
-                    remWire[stage][0] = sum[stage][CSA_CURR * 2 - 1][(STAGE_W - 1)     : 0]         ; 
-                end else if (diff == 2) begin   
-                    remWire[stage][0] = sum[stage][CSA_CURR * 2 - 1][(STAGE_W - 1)     : 0]         ;
-                    remWire[stage][1] = sum[stage][CSA_CURR * 2 - 2][(STAGE_W - 1)     : 0]         ;
-                end 
-            end 
-        end else                 begin  
-            localparam CSA_CURR = CsaCount (stage - 1)                                              ;
-            localparam CSA_NEXT = CsaCount (stage    )                                              ;
-            localparam CSA_BEF  = CsaCount (stage - 2)                                              ;
-            localparam diff     = CSA_CURR * 2 - CSA_NEXT * 3                                       ;
-            localparam diff_bef = CSA_CURR * 3 - CSA_BEF * 2                                        ;
-            always_comb begin
-                if (diff_bef == 1) begin      
-                integer j,k,l,p                                                                     ;
-                RemainWireFunc(stage, j,k,l,p)                                                      ;
-                    sum[stage - 1][CSA_CURR * 3 - 1] = remWire[j][k][(STAGE_W - 1) : 0]             ;
-                end else if (diff_bef == 2) begin
-                integer j,k,l,p                                                                     ;
-                RemainWireFunc(stage, j,k,l,p)                                                      ;
-                    sum[stage - 1][CSA_CURR * 3 - 1] = remWire[j][k][(STAGE_W - 1) : 0]             ;
-                    sum[stage - 1][CSA_CURR * 3 - 2] = remWire[l][p][(STAGE_W - 1) : 0]             ;
+        for (genvar stage = 0; stage <= STAGES_N; stage++) begin
+        localparam   STAGE_W = I_DATA_W +  stage                                                        ;
+            if          (stage == 0) begin  
+                always_comb begin   
+                    if         (I_DATA_N % 3 == 0) begin 
+                        for(int i = 0; i < I_DATA_N; i++) begin    
+                            sum[stage][i] = i_data[i]                                                   ;
+                        end 
+                    end else if(I_DATA_N % 3 == 1) begin    
+                        for(int i = 0; i < I_DATA_N; i++) begin    
+                            sum[stage][i] = i_data[i]                                                   ;
+                        end 
+                        remWire[stage][0] = i_data[I_DATA_N - 1]                                        ;
+                    end else                       begin  
+                        for(int i = 0; i < I_DATA_N; i++) begin    
+                            sum[stage][i] = i_data[i]                                                   ;
+                        end 
+                        remWire[stage][0] = i_data[I_DATA_N - 1]                                        ;
+                        remWire[stage][1] = i_data[I_DATA_N - 2]                                        ;
+                    end   
                 end
-            end
-            for (genvar i = 0; i < CSA_CURR; i++) begin
-                CSA_ff #(STAGE_W - 1) stagenum
-                (
-                    .clk        (clk),
-                    .i_f        (sum[stage - 1][3 * i    ][(STAGE_W - 1) - 1 : 0] )                 ,
-                    .i_s        (sum[stage - 1][3 * i + 1][(STAGE_W - 1) - 1 : 0] )                 ,
-                    .i_t        (sum[stage - 1][3 * i + 2][(STAGE_W - 1) - 1 : 0] )                 ,
-                    .o_stage_s  (sum[stage    ][2*i      ][(STAGE_W - 1)     : 0])                  ,
-                    .o_stage_c  (sum[stage    ][2*i + 1  ][(STAGE_W - 1)     : 0])              
-                )                                                                                   ;  
-            end 
-            always_comb begin   
-                if          (diff == 1) begin   
-                    remWire[stage][0] = sum[stage][CSA_CURR * 2 - 1][(STAGE_W - 1)     : 0]         ; 
-                end else if (diff == 2) begin           
-                    remWire[stage][0] = sum[stage][CSA_CURR * 2 - 1][(STAGE_W - 1)     : 0]         ;
-                    remWire[stage][1] = sum[stage][CSA_CURR * 2 - 2][(STAGE_W - 1)     : 0]         ;
+            end else if (stage == 1) begin
+                localparam CSA_CURR = CsaCount(stage - 1)                                               ;
+                localparam CSA_NEXT = CsaCount(stage    )                                               ;
+                localparam diff     = CSA_CURR * 2 - CSA_NEXT * 3                                       ;
+                for (genvar i = 0; i < CSA_CURR; i++) begin
+                    CSA_ff #(STAGE_W - 1, FF_P[stage]) stagenum
+                    (
+                        .clk        (clk                                             )                  ,
+                        .i_f        (sum[stage - 1][3 * i    ][(STAGE_W - 1) - 1 : 0])                  ,
+                        .i_s        (sum[stage - 1][3 * i + 1][(STAGE_W - 1) - 1 : 0])                  ,
+                        .i_t        (sum[stage - 1][3 * i + 2][(STAGE_W - 1) - 1 : 0])                  ,
+                        .o_stage_s  (sum[stage    ][2 * i    ][(STAGE_W - 1)     : 0])                  ,
+                        .o_stage_c  (sum[stage    ][2 * i + 1][(STAGE_W - 1)     : 0])              
+                    )                                                                                   ;  
+                end 
+                always_comb begin   
+                    if          (diff == 1) begin   
+                        remWire[stage][0] = sum[stage][CSA_CURR * 2 - 1][(STAGE_W - 1) : 0]             ; 
+                    end else if (diff == 2) begin
+                        remWire[stage][0] = sum[stage][CSA_CURR * 2 - 1][(STAGE_W - 1) : 0]             ;
+                        remWire[stage][1] = sum[stage][CSA_CURR * 2 - 2][(STAGE_W - 1) : 0]             ;
+                    end 
+                end 
+            end else                 begin  
+                localparam CSA_CURR = CsaCount (stage - 1)                                              ;
+                localparam CSA_NEXT = CsaCount (stage    )                                              ;
+                localparam CSA_BEF  = CsaCount (stage - 2)                                              ;
+                localparam diff     = CSA_CURR * 2 - CSA_NEXT * 3                                       ;
+                localparam diff_bef = CSA_CURR * 3 - CSA_BEF  * 2                                       ;
+                always_comb begin
+                    if          (diff_bef == 1) begin      
+                    integer j,k,l,p                                                                     ;
+                    RemainWireFunc(stage, j,k,l,p)                                                      ;
+                        sum[stage - 1][CSA_CURR * 3 - 1] = remWire[j][k][(STAGE_W - 1) : 0]             ;
+                    end else if (diff_bef == 2) begin
+                    integer j,k,l,p                                                                     ;
+                    RemainWireFunc(stage, j,k,l,p)                                                      ;
+                        sum[stage - 1][CSA_CURR * 3 - 1] = remWire[j][k][(STAGE_W - 1) : 0]             ;
+                        sum[stage - 1][CSA_CURR * 3 - 2] = remWire[l][p][(STAGE_W - 1) : 0]             ;
+                    end
+                end
+                for (genvar i = 0; i < CSA_CURR; i++) begin
+                    CSA_ff #(STAGE_W - 1, FF_P[stage]) stagenum
+                    (
+                        .clk        (clk                                             )                  ,
+                        .i_f        (sum[stage - 1][3 * i    ][(STAGE_W - 1) - 1 : 0])                  ,
+                        .i_s        (sum[stage - 1][3 * i + 1][(STAGE_W - 1) - 1 : 0])                  ,
+                        .i_t        (sum[stage - 1][3 * i + 2][(STAGE_W - 1) - 1 : 0])                  ,
+                        .o_stage_s  (sum[stage    ][2 * i    ][(STAGE_W - 1)     : 0])                  ,
+                        .o_stage_c  (sum[stage    ][2 * i + 1][(STAGE_W - 1)     : 0])              
+                    )                                                                                   ;  
+                end 
+                always_comb begin   
+                    if          (diff == 1) begin   
+                        remWire[stage][0] = sum[stage][CSA_CURR * 2 - 1][(STAGE_W - 1) : 0]             ; 
+                    end else if (diff == 2) begin           
+                        remWire[stage][0] = sum[stage][CSA_CURR * 2 - 1][(STAGE_W - 1) : 0]             ;
+                        remWire[stage][1] = sum[stage][CSA_CURR * 2 - 2][(STAGE_W - 1) : 0]             ;
+                    end
                 end
             end
         end
-    end
-endgenerate
-assign o_data = sum[STAGES_N][0][O_DATA_W - 1 - 1 : 0] + sum[STAGES_N][1][O_DATA_W - 1 - 1 : 0]     ; 
+    endgenerate
+    assign o_data = $signed(sum[STAGES_N][0][(O_DATA_W - 1) - 1 : 0]) + $signed(sum[STAGES_N][1][(O_DATA_W - 1) - 1 : 0]) ; 
 endmodule
