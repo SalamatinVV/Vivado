@@ -44,7 +44,7 @@ module shuffledVNU
                 .o_compl_data   (varCompl[i])
             )                                                   ;
         end
-        always_comb 
+        always_comb
         begin
             sumFirst[0][5 : 0] = (varCompl[0] + varCompl[1])             ;
             sumFirst[0][6] = sumFirst[0][5];
