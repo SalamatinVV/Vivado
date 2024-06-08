@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
+// Company: IEIT United
+// Engineer: Salamatin Vladislav Vladimirovich
 // 
 // Create Date: 12.04.2024 14:55:28
 // Design Name: 
