@@ -1,4 +1,4 @@
-module sm2compl
+module sm2compl                                                 // Из Прямого кода в Дополнительный код
     ( 
         input  logic [5 : 0] i_data                         ,
         output logic [5 : 0] o_data                         ,
@@ -10,7 +10,7 @@ module sm2compl
     always_comb             
     begin               
         compl_data = | i_data[4 : 0]                        ;
-        o_data     = {i_data[5], i_data[4 : 0] ^ i_data[5]} ;
+        o_data     = {i_data[5], i_data[4 : 0] ^ {i_data[5], i_data[5], i_data[5], i_data[5], i_data[5]}} ;
         o_sign     = compl_data & i_data[5]                 ;                         
     end
 
