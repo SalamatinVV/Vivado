@@ -6,7 +6,6 @@ module sm2compl
     )                                                       ;
 
     logic [4 : 0] compl_data                                ;
-    logic         sign_temp                                 ;
 
     always_comb             
     begin               
