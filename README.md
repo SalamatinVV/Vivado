@@ -1,2 +1,2 @@
 # Vivado project System Verilog
-https://software.download.prss.microsoft.com/dbazure/Win11_25H2_Russian_x64_v2.iso?t=471c887d-b5fc-4d2c-9391-156e64905900&P1=1789079368&P2=602&P3=2&P4=QDQitXtaE7fxm8OcUMdpJ%2fvTZVEj3mww6sgT26vu%2fSjTW7LRWlx4NiPnGXg45pp9hRtShQsonSSyc%2f8poNy9F8tBBYTtGdfZd1HI1zxkNgtTlIawKKsDziOnlxQCQ7EfwUM4xo51PA%2flTiflPgMsJxMXWf8cxLwuki81%2b1IckDfDs7eoHGurUZl4NIx3vu2qMslLAAbZT6QnICpvuWCtCa%2bTgbUSqCtHWBGt5K7UAG5YDotgm19Lly5SKjRUN9FDqdKg5x6J1mCBRu%2fcfmbbxwqpkN%2fWg9bQ%2btc62LOVqCVb3Aw3q609UydnV%2blPK6wQRtlTBH8vQU3Xarv7ldQH0g%3d%3d
+
